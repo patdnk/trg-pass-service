@@ -1,0 +1,70 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.com.theroofgardens.membership",
+  "serialNumber": "000001",
+  "webServiceURL": "https://pass.theroofgardens.com/passes/",
+  "authenticationToken": "vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc",
+  "teamIdentifier": "SYGZ7Z8UKH",
+  "locations": [
+    {
+      "longitude": 51.50151001570652,
+      "latitude": -0.1916526308395215
+    },
+    {
+      "longitude": 51.50054407478707,
+      "latitude": -0.19195660013774998
+    }
+  ],
+  "organizationName": "The Roof Gardens",
+  "description": "The Roof Gardens Membership",
+  "foregroundColor": "rgb(39, 39, 39)",
+  "backgroundColor": "rgb(171, 189, 181)",
+  "generic": {
+    "headerFields": [
+      {
+        "key": "points",
+        "label": "points",
+        "labelColor": "rgb(255, 0, 39)",
+        "value": "2000"
+      }
+    ],
+    "primaryFields" : [
+    ],
+    "secondaryFields": [
+      {
+        "key": "subtitle",
+        "label": "MEMBER SINCE",
+        "value": "2012"
+      }
+    ],
+    "auxiliaryFields": [
+      {
+        "key": "level",
+        "label": "",
+        "value": "Founder"
+      }
+    ],
+    "backFields": [
+      {
+        "dateStyle": "PKDateStyleFull",
+        "label": "joined date",
+        "key": "dateFull",
+        "value": "1980-05-07T10:00-05:00"
+      },
+      {
+        "dateStyle": "PKDateStyleShort",
+        "label": "short date and time",
+        "key": "dateTime",
+        "value": "1980-05-07T10:00-05:00",
+        "timeStyle": "PKDateStyleShort"
+      },
+      {
+        "dateStyle": "PKDateStyleShort",
+        "label": "joined date",
+        "key": "joinedDate",
+        "value": "2013-04-24T10:00-05:00",
+        "isRelative": true
+      }
+    ]
+  }
+}
