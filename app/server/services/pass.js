@@ -1,30 +1,31 @@
 const { PKPass, NFC } = require('passkit-generator');
+const { google } = require('googleapis');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const salesforceService = require('../services/salesforce');
+
 var fs = require('file-system');
 var path = require('path');
 
-const passService = require('../services/pass');
-
-exports.pass = (request, response) => {
+async function getMemberDetails(memberId) {
     try {
-        console.log(request.url);
-        response.setTimeout(15000, () => {
-            response.status(408);
-            return response.send("Request timeout");
-        });
+        const memberDetails = await salesforceService.getMemberDetails(memberId);
+    } catch (error) {
+        console.log(error(error.message));
+        return undefined;
+    }
+}
 
-        //token validation
-        //pass retrieval/generation
-        //---
-        // check the headers for the device type
-        if (deviceType == "iOS") {
-            appleWalletPassService.generatePass(request.params.memberId)
-        }
-        if (deviceType == "android") {
-            googleWalletPassService.generatePass(request.params.memberId)
-        }
-        //---
+async function generatePass(type, memberId) {
+    if (type == "ios") {
+        const member = await getMemberDetails(memberId);
 
-        const passName =
+    }
+
+}
+
+function generateApplePass(memberId) {
+    const passName =
 		"trg_membership" +
 		"_" +
 		new Date().toISOString().split("T")[0].replace(/-/gi, "");
@@ -102,17 +103,12 @@ exports.pass = (request, response) => {
                 //             });
                 //     })
             })
-    } catch (err) {
-        response.status(400).send({
-            "pass": request.url,
-            "status": "Pass creation error: " + err,
-            "result": "FAILURE",
-        })
-    }
+}
 
-};
+function generateGooglePass(memberId) {
 
-exports.test = (request, response) => {
-    response.send({ passReady: true });
-};
+}
 
+module.exports = {
+    generatePass,
+  };
