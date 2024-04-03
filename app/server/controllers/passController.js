@@ -16,12 +16,7 @@ exports.pass = (request, response) => {
         //pass retrieval/generation
         //---
         // check the headers for the device type
-        if (deviceType == "iOS") {
-            appleWalletPassService.generatePass(request.params.memberId)
-        }
-        if (deviceType == "android") {
-            googleWalletPassService.generatePass(request.params.memberId)
-        }
+        passService.generatePass(type, request.params.memberId)
         //---
 
         const passName =
@@ -30,7 +25,7 @@ exports.pass = (request, response) => {
 		new Date().toISOString().split("T")[0].replace(/-/gi, "");
 
         PKPass.from({
-            model: "./server/models/membership.pass",
+            model: "./server/models/apple/membership.pass",
             certificates: {
                 wwdr: fs.fs.readFileSync("./server/data/certs/wwdrg4.pem"),
                 signerCert: fs.fs.readFileSync("./server/data/certs/signerCert.pem"),
