@@ -1,7 +1,6 @@
 const jsforce = require("jsforce");
 const env = process.env.NODE_ENV || "development";
 const config = require('../../config/config.js')[env];
-//models
 const { Member } = require( "../models" ).member;
 
 const conn = new jsforce.Connection({
@@ -11,6 +10,7 @@ const conn = new jsforce.Connection({
 async function getMemberDetails(memberId) {
 
   var member;
+
   try {
     let login = await conn.login(config.salesforce.user, config.salesforce.password + config.salesforce.token);
     try {
@@ -36,7 +36,6 @@ async function getMemberDetails(memberId) {
         "isVip": res.records[0].VIP__pc,
         "dateOfJoining": res.records[0].Date_of_Joining__pc,
       };
-
       member = new Member(memberData);
 
     } catch (error) {

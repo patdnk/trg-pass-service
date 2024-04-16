@@ -1,0 +1,6 @@
+### GET healthcheck status
+get http://localhost:3000/healthcheck
+
+
+### GET member by id
+get http://localhost:3000/v1/members/00103

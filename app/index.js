@@ -16,13 +16,21 @@ console.log("port: ", config.serverPort)
 
 // startup check
 // app.listen(config.serverPort, '192.168.1.12', function (err) {
-app.listen(config.serverPort, '192.168.1.12', function (err) {
-    if (err) {
-        console.error('Failure to launch server');
-        return;
-    }
-    console.log(`SERVER Listening on port ${config.serverPort}`);
-  });
+// app.listen(config.serverPort, '192.168.1.12', function (err) {
+//     if (err) {
+//         console.error('Failure to launch server');
+//         return;
+//     }
+//     console.log(`SERVER Listening on port ${config.serverPort}`);
+//   });
+
+app.listen(config.serverPort, function (err) {
+  if (err) {
+    console.error('Failure to launch server');
+    return;
+  }
+  console.log(`SERVER Listening on port ${config.serverPort}`);
+});
 
 // routes
 require( "./server/routes/index.js" )( app );

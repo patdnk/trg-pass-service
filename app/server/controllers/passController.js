@@ -1,10 +1,59 @@
-const { PKPass, NFC } = require('passkit-generator');
+// const { PKPass, NFC } = require('passkit-generator');
 var fs = require('file-system');
 var path = require('path');
 
 const passService = require('../services/pass');
 
-exports.pass = (request, response) => {
+const { Error } = require("../models").error;
+
+const salesforceService = require('../services/salesforce');
+
+exports.members = async (request, response) => {
+    console.log(request.url);
+    response.setTimeout(15000, () => {
+        response.status(408);
+      return response.send("Request timeout");
+    });
+
+    try {
+      const member = await salesforceService.getMemberDetails(request.params.memberId);
+      console.log(`member received: ${member}`);
+      return response.status(200).send(member);
+    } catch(error) {
+      return response.status(400).send("error");
+    }
+}
+
+// exports.member = async (request, response) => {
+    // console.log(request.url);
+    // var memberDetails;
+    // try {
+    //     memberDetails = await salesforceService.getMemberDetails(request.params.memberId);
+    //     // console.log(`member received: ${member}`);
+    //     // response.status(200).send(memberDetails);
+
+    // } catch {
+    // //     console.error("no member found");
+    //     // response.status(404).send(memberDetails == true);
+    // }
+
+//     ///------------old
+//     console.log(request.url);
+//     response.setTimeout(15000, () => {
+//         response.status(408);
+//       return response.send("Request timeout");
+//     });
+
+//     try {
+//       const member = await salesforceService.getMemberDetails(request.params.id);
+//       console.log(`member received: ${member}`);
+//       return response.status(200).send(member);
+//     } catch(error) {
+//       return response.status(400).send("error");
+//     }
+// }
+
+exports.pass = async (request, response) => {
     try {
         console.log(request.url);
         response.setTimeout(15000, () => {
@@ -12,102 +61,187 @@ exports.pass = (request, response) => {
             return response.send("Request timeout");
         });
 
-        //token validation
-        //pass retrieval/generation
-        //---
-        // check the headers for the device type
-        passService.generatePass(type, request.params.memberId)
-        //---
-
-        const passName =
-		"trg_membership" +
-		"_" +
-		new Date().toISOString().split("T")[0].replace(/-/gi, "");
-
-        PKPass.from({
-            model: "./server/models/apple/membership.pass",
-            certificates: {
-                wwdr: fs.fs.readFileSync("./server/data/certs/wwdrg4.pem"),
-                signerCert: fs.fs.readFileSync("./server/data/certs/signerCert.pem"),
-                signerKey: fs.fs.readFileSync("./server/data/certs/signerKey.pem"),
-                signerKeyPassphrase: "_sec_R00fGarden$!", //pass via env+aws+OP
-            },
-
-        },
-            {
-                authenticationToken: "vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc",
-                webServiceURL: "https://pass.theroofgardens.com/pass",
-                serialNumber: "PASS-00666", //memberNumber
-                description: "The Roof Gardens membership pass",
-                logoText: "The Roof Gardens",
-                foregroundColor: "rgb(39, 39, 39)",
-                backgroundColor: "rgb(171, 189, 181)",
+        // set the origin of the pass for generator
+        var passOrigin;
+        if (!('user-agent' in request.headers)) {
+            let error = new Error({
+                "code": "00010",
+                "description": request.url,
+                "status": "no agent header present ",
+                "result": "FAILURE"
             })
-            .then(async (newPass) => {
-                newPass.primaryFields.push(
-                    {
-                        key: "primary",
-                        label: "req.label", //Member
-                        value: "req.value" // Firstname Lastname
-                    }
-                ),
-                newPass.setNFC(NFC)
+            response.status(400).send(error);
+        } else {
+            //check for apple and google device types
+            let userAgent = request.headers['user-agent'];
+            if (userAgent == 'iOS') {
+                passOrigin = PassOrigin.iOS;
+            } else if (deviceType == 'android') {
+                passOrigin = PassOrigin.iOS;
+            } else {
+                let error = new Error({
+                    "code": "00020",
+                    "description": request.url,
+                    "status": "no agent present",
+                    "result": "FAILURE"
+                })
+                response.status(400).send(error);
+            }
+        }
 
-                // const buffer = Buffer.from(response.data, "utf-8");
-                const bufferData = newPass.getAsBuffer();
-                // fs.writeFileSync("new.pkpass", bufferData);
+        var memberDetails;
+        try {
+            memberDetails = await salesforceService.getMemberDetails(request.params.memberId);
+            console.log(`member received: ${member}`);
+        } catch {
+            console.error("no member found");
+        }
 
-                // -->
+        console.log('creating pass object');
 
-                // response.status(200).send({
-                //     "pass": request.url,
-                //     "status": "Pass successfully generated on server.",
-                //     "result": "SUCCESS",
-                // })
-                const stream = newPass.getAsStream();
+        try {
+            const passObject = await passService.generatePass(passOrigin, memberDetails);
+
+            if (passObject) {
+
+                console.log('checking pass origin');
+
+            if (passOrigin == PassOrigin.iOS) {
+
+                console.log('define stream for ios');
+                const passName = "trg_membership_" + new Date().toISOString().split("T")[0].replace(/-/gi, "");
+
+                // const bufferData = passObject.getAsBuffer();
+                const stream = passObject.getAsStream();
                 response.set({
-                    "Content-type": newPass.mimeType,
+                    "Content-type": passObject.mimeType,
                     "Content-disposition": `attachment: filename=${passName}.pkpass`
                 });
                 stream.pipe(response);
 
-                // const stream = newPass.getAsStream()
-                //         .then((stream) => {
-                //             console.log(stream);
-                //         })
-                //         .catch((err) => {
-                //             console.log(err);
-                //         });
+            } else if (passOrigin == PassOrigin.iOS) {
+
+            } else {
+
+                let error = new Error({
+                    "code": "00030",
+                    "description": request.url,
+                    "status": "no origin",
+                    "result": "FAILURE"
+                })
+                response.status(400).send(error);
+            }
+            }
+
+            
+        } catch {
+            console.log("error generating pass")
+        }
 
 
-                // storageRef.file("passes/custom.pkpass")
-                //     .save(bufferData, (error) => {
-                //         if (!error) {
-                //             console.log("pass uploaded");
-                //             response.status(200).send({
-                //                 "pass": request.url,
-                //                 "status": "Pass successfully generated on server.",
-                //                 "result": "SUCCESS",
-                //             });
-                //         } else {
-                //             console.log("Error Uploading pass " + error);
-                //             response.send({
-                //                 "explanation": error.message,
-                //                 "result": "FAILED",
-                //             });
-                //     })
-            })
+
+
+        // const passName =
+		// "trg_membership" +
+		// "_" +
+		// new Date().toISOString().split("T")[0].replace(/-/gi, "");
+
+        // PKPass.from({
+        //     model: "./server/models/apple/membership.pass",
+        //     certificates: {
+        //         wwdr: fs.fs.readFileSync("./server/data/certs/wwdrg4.pem"),
+        //         signerCert: fs.fs.readFileSync("./server/data/certs/signerCert.pem"),
+        //         signerKey: fs.fs.readFileSync("./server/data/certs/signerKey.pem"),
+        //         signerKeyPassphrase: "_sec_R00fGarden$!", //pass via env+aws+OP
+        //     },
+
+        // },
+        //     {
+        //         authenticationToken: "vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc",
+        //         webServiceURL: "https://pass.theroofgardens.com/pass",
+        //         serialNumber: "PASS-00666", //memberNumber
+        //         description: "The Roof Gardens membership pass",
+        //         logoText: "The Roof Gardens",
+        //         foregroundColor: "rgb(39, 39, 39)",
+        //         backgroundColor: "rgb(171, 189, 181)",
+        //     })
+        //     .then(async (newPass) => {
+        //         newPass.primaryFields.push(
+        //             {
+        //                 key: "primary",
+        //                 label: "req.label", //Member
+        //                 value: "req.value" // Firstname Lastname
+        //             }
+        //         ),
+        //         newPass.setNFC(NFC)
+
+        //         // const buffer = Buffer.from(response.data, "utf-8");
+        //         const bufferData = newPass.getAsBuffer();
+        //         // fs.writeFileSync("new.pkpass", bufferData);
+
+        //         // -->
+
+        //         // response.status(200).send({
+        //         //     "pass": request.url,
+        //         //     "status": "Pass successfully generated on server.",
+        //         //     "result": "SUCCESS",
+        //         // })
+        //         const stream = newPass.getAsStream();
+        //         response.set({
+        //             "Content-type": newPass.mimeType,
+        //             "Content-disposition": `attachment: filename=${passName}.pkpass`
+        //         });
+        //         stream.pipe(response);
+
+        //         // const stream = newPass.getAsStream()
+        //         //         .then((stream) => {
+        //         //             console.log(stream);
+        //         //         })
+        //         //         .catch((err) => {
+        //         //             console.log(err);
+        //         //         });
+
+
+        //         // storageRef.file("passes/custom.pkpass")
+        //         //     .save(bufferData, (error) => {
+        //         //         if (!error) {
+        //         //             console.log("pass uploaded");
+        //         //             response.status(200).send({
+        //         //                 "pass": request.url,
+        //         //                 "status": "Pass successfully generated on server.",
+        //         //                 "result": "SUCCESS",
+        //         //             });
+        //         //         } else {
+        //         //             console.log("Error Uploading pass " + error);
+        //         //             response.send({
+        //         //                 "explanation": error.message,
+        //         //                 "result": "FAILED",
+        //         //             });
+        //         //     })
+        //     })
     } catch (err) {
-        response.status(400).send({
-            "pass": request.url,
+        console.log("boing");
+        let error = new Error({
+            "code": "00020",
+            "description": request.url,
             "status": "Pass creation error: " + err,
-            "result": "FAILURE",
-        })
+            "result": "FAILURE"
+        }
+        );
+        response.status(400).send(error);
     }
 
 };
 
-exports.test = (request, response) => {
-    response.send({ passReady: true });
+
+const PassOrigin = Object.freeze({
+    iOS: 'iOS',
+    android: 'android',
+})
+
+exports.test = async (request, response) => {
+    response.send(
+        { passReady: true }
+    );
 };
 

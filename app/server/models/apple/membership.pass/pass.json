@@ -18,31 +18,15 @@
   "organizationName": "The Roof Gardens",
   "description": "The Roof Gardens Membership",
   "foregroundColor": "rgb(39, 39, 39)",
-  "backgroundColor": "rgb(171, 189, 181)",
+  "backgroundColor": "rgb(229, 229, 205)",
   "generic": {
     "headerFields": [
-      {
-        "key": "points",
-        "label": "points",
-        "labelColor": "rgb(255, 0, 39)",
-        "value": "2000"
-      }
     ],
     "primaryFields" : [
     ],
     "secondaryFields": [
-      {
-        "key": "subtitle",
-        "label": "MEMBER SINCE",
-        "value": "2012"
-      }
     ],
     "auxiliaryFields": [
-      {
-        "key": "level",
-        "label": "",
-        "value": "Founder"
-      }
     ],
     "backFields": [
       {
