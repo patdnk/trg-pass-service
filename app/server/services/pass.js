@@ -50,7 +50,7 @@ async function generateApplePass(member) {
     const passName =
         "trg_" + member.memberId + "_" + new Date().toISOString().split("T")[0].replace(/-/gi, "");
 
-    PKPass.from({
+    return PKPass.from({
         model: "./server/models/apple/membership.pass",
         certificates: {
             wwdr: fs.fs.readFileSync("./server/data/certs/wwdrg4.pem"),
