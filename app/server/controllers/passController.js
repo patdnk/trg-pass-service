@@ -70,7 +70,7 @@ exports.pass = async (request, response) => {
                 "status": "no agent header present ",
                 "result": "FAILURE"
             })
-            response.status(400).send(error);
+            return response.status(400).send(error);
         } else {
             //check for apple and google device types
             let userAgent = request.headers['user-agent'];
@@ -85,7 +85,7 @@ exports.pass = async (request, response) => {
                     "status": "no agent present",
                     "result": "FAILURE"
                 })
-                response.status(400).send(error);
+                return response.status(400).send(error);
             }
         }
 
@@ -94,7 +94,7 @@ exports.pass = async (request, response) => {
             memberDetails = await salesforceService.getMemberDetails(request.params.memberId);
         } catch (err) {
             console.log(error);
-            // response.status(400).send(err);
+            return response.status(400).send(err);
         }
 
         console.log("started await passService.generatePass(passOrigin, memberDetails);");
@@ -103,14 +103,14 @@ exports.pass = async (request, response) => {
             const passObject = await passService.generatePass(passOrigin, memberDetails);
             console.log("finished? await passService.generatePass(passOrigin, memberDetails);");
 
-            if (passObject == undefined) {
+            if (!passObject) {
                 let error = new Error({
                     "code": "00030",
                     "description": request.url,
                     "status": "issue generating pass",
                     "result": "FAILURE"
                 })
-                response.status(500).send(error);
+                return response.status(500).send(error);
             }
 
             if (passOrigin == PassOrigin.iOS) {
@@ -122,7 +122,7 @@ exports.pass = async (request, response) => {
                     "Content-type": passObject.mimeType,
                     "Content-disposition": `attachment: filename=${passName}.pkpass`
                 });
-                stream.pipe(response);
+                return stream.pipe(response);
                 // response.send(200);
 
             } else if (passOrigin == PassOrigin.iOS) {
@@ -134,7 +134,7 @@ exports.pass = async (request, response) => {
                     "status": "no origin",
                     "result": "FAILURE"
                 })
-                response.status(400).send(error);
+                return response.status(400).send(error);
             }
         } catch {
             let error = new Error({
@@ -143,7 +143,7 @@ exports.pass = async (request, response) => {
                 "status": "issue generating pass",
                 "result": "FAILURE"
             })
-            response.status(500).send(error);
+            return response.status(500).send(error);
         }
 
 
@@ -235,6 +235,8 @@ exports.pass = async (request, response) => {
             "status": "Pass creation error: " + err,
             "result": "FAILURE"
         });
+        return response.status(400).send(error);
+        
     }
 
 };
