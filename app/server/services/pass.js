@@ -8,6 +8,7 @@ var fs = require('file-system');
 var path = require('path');
 
 const { member } = require('../models');
+const { error } = require('console');
 
 const PassOrigin = Object.freeze({
     iOS: 'iOS',
@@ -20,10 +21,11 @@ async function generatePass(origin, memberDetails) {
     try {
         if (origin == "iOS") {
             try {
-                const pass = generateApplePass(memberDetails);
+                const pass = await generateApplePass(memberDetails);
                 return pass;
             } catch (err) {
-                console.log("apple pass generation error: " + err);s
+                console.log("apple pass generation error: " + err);
+                throw new error;
             }
         } else if (origin == "android") {
             try {
@@ -31,13 +33,15 @@ async function generatePass(origin, memberDetails) {
                 return pass;
             } catch (err) {
                 console.log("apple pass generation error: " + err);
+                throw new error;
             }
         } else {
             console.log("unknown origin");
+            return("unknown origin");
         }
-    } catch (error) {
-        // throw(error);
+    } catch (err) {
         console.log("unknown origin");
+        throw new error;
     }
 
 }
@@ -54,7 +58,6 @@ async function generateApplePass(member) {
             signerKey: fs.fs.readFileSync("./server/data/certs/signerKey.pem"),
             signerKeyPassphrase: "_sec_R00fGarden$!", //pass via env+aws+OP
         },
-
     },
         {
             authenticationToken: "vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc",
