@@ -92,50 +92,58 @@ exports.pass = async (request, response) => {
         var memberDetails;
         try {
             memberDetails = await salesforceService.getMemberDetails(request.params.memberId);
-            console.log(`member received: ${member}`);
-        } catch {
-            console.error("no member found");
+        } catch (err) {
+            console.log(error);
+            // response.status(400).send(err);
         }
 
-        console.log('creating pass object');
+        console.log("started await passService.generatePass(passOrigin, memberDetails);");
 
         try {
             const passObject = await passService.generatePass(passOrigin, memberDetails);
+            console.log("finished? await passService.generatePass(passOrigin, memberDetails);");
 
-            if (passObject) {
-
-                console.log('checking pass origin');
+            if (passObject == undefined) {
+                let error = new Error({
+                    "code": "00030",
+                    "description": request.url,
+                    "status": "issue generating pass",
+                    "result": "FAILURE"
+                })
+                response.status(500).send(error);
+            }
 
             if (passOrigin == PassOrigin.iOS) {
 
                 console.log('define stream for ios');
                 const passName = "trg_membership_" + new Date().toISOString().split("T")[0].replace(/-/gi, "");
-
-                // const bufferData = passObject.getAsBuffer();
                 const stream = passObject.getAsStream();
                 response.set({
                     "Content-type": passObject.mimeType,
                     "Content-disposition": `attachment: filename=${passName}.pkpass`
                 });
                 stream.pipe(response);
+                // response.send(200);
 
             } else if (passOrigin == PassOrigin.iOS) {
 
             } else {
-
                 let error = new Error({
-                    "code": "00030",
+                    "code": "00032",
                     "description": request.url,
                     "status": "no origin",
                     "result": "FAILURE"
                 })
                 response.status(400).send(error);
             }
-            }
-
-            
         } catch {
-            console.log("error generating pass")
+            let error = new Error({
+                "code": "00031",
+                "description": request.url,
+                "status": "issue generating pass",
+                "result": "FAILURE"
+            })
+            response.status(500).send(error);
         }
 
 
@@ -220,15 +228,13 @@ exports.pass = async (request, response) => {
         //         //     })
         //     })
     } catch (err) {
-        console.log("boing");
+        console.log("something went wrong");
         let error = new Error({
             "code": "00020",
             "description": request.url,
             "status": "Pass creation error: " + err,
             "result": "FAILURE"
-        }
-        );
-        response.status(400).send(error);
+        });
     }
 
 };

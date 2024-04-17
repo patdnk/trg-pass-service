@@ -1,10 +1,11 @@
 const controller = require( "../controllers" ).pass;
 
 module.exports = app => {
-    // app.get( "/pass.com.theroofgardens.membership/:memberId?:token", controller.pass );
-    // app.get( "/pass.com.theroofgardens.membership/pass", controller.pass );
-    // app.get( "/pass.com.theroofgardens.membership/test", controller.test );
-    app.get( "/v1/members/:memberId", controller.members );
+    //apple
     app.get( "/v1/pass/:memberId", controller.pass );
-    app.get( "/v1/test", controller.test );
+    // app.post( "/v1/devices/:deviceId/registrations/:passTypeId/:passSerialNumber", controller.passRegistrations );
+    // app.get( "/v1/devices/:deviceId/registrations/:passTypeId?passesUpdatedSince=:previousLastUpdated", controller.passTimestampCheck );
+    // app.get( "/v1/passes/:passTypeId/:passSerialNumber", controller.passUpdate );
+    //google
+    // app.get( " ");
 };

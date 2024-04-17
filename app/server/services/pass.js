@@ -17,32 +17,34 @@ const PassOrigin = Object.freeze({
 async function generatePass(origin, memberDetails) {
 
     var memberDetails;
-    console.log("origin for pass : " + origin);
     try {
-        // memberDetails = await salesforceService.getMemberDetails(memberId);
-        // console.log(`member received: ${member}`);
-
-        console.log("check origin: " + origin);
         if (origin == "iOS") {
-            return generateApplePass(memberDetails);
+            try {
+                const pass = generateApplePass(memberDetails);
+                return pass;
+            } catch (err) {
+                console.log("apple pass generation error: " + err);s
+            }
         } else if (origin == "android") {
-            return generateGooglePass(memberDetails);
+            try {
+                const pass = generateGooglePass(memberDetails);
+                return pass;
+            } catch (err) {
+                console.log("apple pass generation error: " + err);
+            }
+        } else {
+            console.log("unknown origin");
         }
-
-        return;
-
     } catch (error) {
         // throw(error);
-        return undefined;
+        console.log("unknown origin");
     }
 
 }
 
-function generateApplePass(member) {
+async function generateApplePass(member) {
     const passName =
         "trg_" + member.memberId + "_" + new Date().toISOString().split("T")[0].replace(/-/gi, "");
-
-    console.log(passName);
 
     PKPass.from({
         model: "./server/models/apple/membership.pass",
@@ -55,8 +57,8 @@ function generateApplePass(member) {
 
     },
         {
-            // authenticationToken: "vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc",
-            // webServiceURL: "https://pass.theroofgardens.com/pass",
+            authenticationToken: "vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc",
+            webServiceURL: "https://pass.theroofgardens.com/pass",
             serialNumber: "trg-" + member.memberId, //memberNumber
             description: "The Roof Gardens membership pass",
             logoText: "The Roof Gardens",
@@ -71,15 +73,16 @@ function generateApplePass(member) {
                     value: member.firstName + " " + member.lastName
                 }
             ),
-                newPass.setNFC(NFC)
+                newPass.setNFC(NFC);
+                // console.log("newPass: " + newPass);
 
             // const buffer = Buffer.from(response.data, "utf-8");
             const bufferData = newPass.getAsBuffer();
             fs.writeFileSync("trg_membership.pkpass", bufferData);
 
-            console.log("newPass: " + newPass);
-            console.log("bufferData: " + bufferData);
-
+            // console.log("newPass: " + newPass);
+            // console.log("bufferData: " + bufferData);
+            console.log("passService generateApplePass(member)");
             return newPass;
 
             // -->
